@@ -5,18 +5,18 @@
 <script src = 'lodash.min.js'></script>
 <script src = 'grafar.js'></script>
 <script src = 'polyfill.js'></script>
+<script src = 'graphdata.js'></script>
 <script src = 'reactive.js'></script>
 <script>
 
-    var n = 600;
-    var foo = function(x,y) {return x + (x - y);};
+    var n = 200;
+    var foo = function(x,y) {return x + Math.sin(Math.cos(x) - y);};
     var seq = function(src, target, len) {
         for (var i = 0; i < len; i++)
             target[i] = 0 + i / len;
     };
     var arrfoo = function(src, target, len) {
-        var x = src[0], 
-            y = src[1];
+        var x = src[0], y = src[1];
         for (var i = 0; i < len; i++)
             target[i] = foo(x[i], y[i]);
     };
@@ -28,7 +28,8 @@
         .buffer(n);
     var z = grafar.lift(grafar.wrapFn(foo))
         .bind(grafar.Reactive.times([x, y]))
-        .buffer(n);
+        .buffer(n * n);
+    //z.validate().invalidate();
     
     console.time('map');
     //console.log(x, y);
@@ -38,6 +39,8 @@
     var res = z.value();
     //console.log(res);
     console.timeEnd('map');
+    
+    console.log(res);
 	
 	// http://jsperf.com/row-vs-col-map
     // http://jsperf.com/n-list-mapping
