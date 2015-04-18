@@ -3,21 +3,20 @@
 	var parseArray = grafar.parseArray;
     var add = grafar.add;
     var remove = grafar.remove;
+    var GraphNode = grafar.GraphNode;
     
     
     var lift = function(fn) {
-        return new Reactive(fn);
+        return new Reactive().lift(fn);
     };
     
-	var Reactive = function(fn) {
-		fn = fn || function() {};
-		
+	var Reactive = function() {
+        GraphNode.call(this);
+    
 		this.data = new Float32Array(0);
-		this.fn = fn;
+		this.fn = function() {};
         this.length = 0;
 		this.isValid = false;
-        this.children = [];
-        this.parents = [];
 	};
 	
 	
@@ -30,7 +29,7 @@
             targetLen = srcLen * factor;
 		return lift(function(src, target, len) {
 			for (var i = 0; i < len; i += srcLen)
-				target.set(src[0], i);
+				target.set(src[0].data, i);
 		}).buffer(targetLen).bind([col]);
 	};
 	
@@ -41,7 +40,7 @@
 			var iFrom = srcLen - 1,
 				iTo = targetLen - 1;
 			while (iFrom >= 0) {
-				var val = src[0][iFrom];
+				var val = src[0].data[iFrom];
 				for (var j = 0; j < factor; j++, iTo--)
 					target[iTo] = val;
 				iFrom--;
@@ -79,6 +78,11 @@
 		return this;
 	};
     
+    Reactive.prototype.lift = function(fn) {
+        this.fn = fn;
+        return this;
+    };
+    
 	Reactive.prototype.bind = function(inputs) {
         inputs = _.isArray(inputs)? inputs: [inputs];
         
@@ -86,9 +90,8 @@
         
         _.forEach(
             inputs, 
-            function(input) {
-                this.parents.push(input);
-                input.children.push(this);
+            function(parent) {
+                GraphNode.edge(parent, this);
             },
             this
         );
@@ -99,20 +102,21 @@
     Reactive.prototype.unbind = function() {
         _.forEach(
             this.parents, 
-            function(input) {
-                remove(input.children, this);
+            function(parent) {
+                GraphNode.removeEdge(parent, this);
             },
             this
         );
-        this.parents.length = 0;
         
         return this;
     };
     	    	
 	Reactive.prototype.validate = function() {
 		if (!this.isValid) {
-            var rawInputs = _.map(this.parents, function(parent) {return parent.value()});
-            this.fn(rawInputs, this.data, this.length);
+            var rawInputs = _.map(this.parents, function(parent) {
+                return parent.value();
+            });
+            this.fn(this.parents, this.data, this.length);
 			this.isValid = true;
 		}
 		return this;
