@@ -5,45 +5,39 @@
     var remove = grafar.remove;
 	
 	
-	function GraphData() {
-		this.adjacencyList = {};
-	}
-	
-	GraphData.prototype.addEdge = function(from, to) {
-		this.addNode(from);
-		this.addNode(to);
-		add(this.adjacencyList[from], to);
-		return this;
-	};
-	
-	GraphData.prototype.removeEdge = function(from, to) {
-		remove(this.adjacencyList[from], to);
-		return this;
-	};
-	
-	GraphData.prototype.addNode = function(name) {
-		if (!this.adjacencyList[name]) {
-			this.adjacencyList[name] = [];
-		}
-		return this;
-	};
-	
-	GraphData.prototype.removeNode = function(name) {
-		if (this.adjacencyList[name]) {
-			this.adjacencyList[name] = null;
-			for (var from in this.adjacencyList)
-				if (this.adjacencyList[from])
-					this.removeEdge(from, name);
-		}
-		return this;
-	};
-	
+	function GraphNode() {
+		this.children = [];
+		this.parents = [];
+    }
     
-    function GraphMixin() {
-        this.parents = [];
-        this.children = [];
+    GraphNode.isGraphNode = function(obj) {
+        return Array.isArray(obj.children) &&
+            Array.isArray(obj.parents);// &&
+            //obj.addChild === graphNode.addChild &&
+            //obj.dropChild === graphNode.dropChild;
     };
-        
 	
-	grafar.GraphData = GraphData;
+	GraphNode.edge = function(from, to) {
+		if (GraphNode.isGraphNode(from))
+            add(from.children, to);
+        if (GraphNode.isGraphNode(to))
+            add(to.parents, from);
+	};
+	
+	GraphNode.removeEdge = function(from, to) {
+        if (GraphNode.isGraphNode(from))
+            remove(from.children, to);
+        if (GraphNode.isGraphNode(to))
+            remove(to.parents, from);
+	};
+    
+    GraphNode.sources = function(nodes) {
+        if (!Array.isArray(nodes))
+            nodes = [nodes];
+        var res = [];
+        _.forEach(nodes) {
+        };
+    };
+	
+	grafar.GraphNode = GraphNode;
 }(this));
